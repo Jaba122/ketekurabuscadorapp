@@ -23,7 +23,7 @@ import androidx.compose.runtime.setValue
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     val resultados = mutableStateListOf<Pago>()
     val mensaje = mutableStateOf<String?>(null)
-    var isLoading by mutableStateOf(false) // Estado para el indicador de carga
+    var isLoading by mutableStateOf(false)
         private set
 
     private val _rut = MutableStateFlow("")
@@ -40,6 +40,39 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _rutError.value = "El RUT no puede estar vacío"
         } else {
             _rutError.value = null
+        }
+    }
+
+    fun loadPatientAttentions(patientRut: String) {
+        viewModelScope.launch {
+            isLoading = true
+            try {
+                // Cargar desde la BD y ordenar
+                val cachedAttentions = pagoDao.getPagosByRut(patientRut)
+                    .sortedBy { it.fecha_venc_pago } // Ordena por fecha de vencimiento
+                resultados.clear()
+                resultados.addAll(cachedAttentions)
+
+                // Actualizar desde la red si hay conexión
+                if (isNetworkAvailable()) {
+                    val networkResponse = RetrofitInstance.api.buscarPorRut(patientRut)
+                    if (networkResponse.isNotEmpty()) {
+                        pagoDao.insertAll(networkResponse)
+                        val freshAttentions = pagoDao.getPagosByRut(patientRut)
+                            .sortedBy { it.fecha_venc_pago }
+                        resultados.clear()
+                        resultados.addAll(freshAttentions)
+                    }
+                }
+                if (resultados.isEmpty()) {
+                    mensaje.value = "No tienes atenciones pendientes."
+                }
+
+            } catch (e: Exception) {
+                mensaje.value = "Error al cargar tus atenciones: ${e.localizedMessage}"
+            } finally {
+                isLoading = false
+            }
         }
     }
 
@@ -65,7 +98,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         viewModelScope.launch {
-            isLoading = true // Empezar a cargar
+            isLoading = true
             mensaje.value = null
             try {
                 val cachedResults = when {
@@ -103,7 +136,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {
                 mensaje.value = "Error: ${e.localizedMessage}"
             } finally {
-                isLoading = false // Terminar de cargar
+                isLoading = false
             }
         }
     }
