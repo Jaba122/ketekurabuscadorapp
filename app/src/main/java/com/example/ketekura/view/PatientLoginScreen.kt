@@ -47,7 +47,7 @@ fun PatientLoginScreen(
         OutlinedTextField(
             value = rut,
             onValueChange = { authViewModel.patientRut.value = it },
-            label = { Text("RUT") },
+            label = { Text("12345678-9") },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(Modifier.height(8.dp))
