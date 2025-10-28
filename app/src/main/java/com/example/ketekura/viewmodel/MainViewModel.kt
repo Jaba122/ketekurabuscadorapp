@@ -8,6 +8,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.ketekura.db.AppDatabase
 import com.example.ketekura.model.Pago
 import com.example.ketekura.network.RetrofitInstance
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +27,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _rutError = MutableStateFlow<String?>(null)
     val rutError: StateFlow<String?> = _rutError.asStateFlow()
+
+    // Instancia del DAO
+    private val pagoDao = AppDatabase.getDatabase(application).pagoDao()
 
     fun onRutChange(newRut: String) {
         _rut.value = newRut
@@ -49,11 +53,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun buscar(ateId: String?, rut: String?) {
-        if (!isNetworkAvailable()) {
-            mensaje.value = "No hay conexión a internet."
-            return
-        }
-
+        // Validación
         if (!rut.isNullOrBlank()) {
             onRutChange(rut)
             if (_rutError.value != null) {
@@ -63,10 +63,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         viewModelScope.launch {
+            // 1. Cargar desde la base de datos local primero
             try {
-                resultados.clear()
-                mensaje.value = null
+                val cachedResults = when {
+                    !ateId.isNullOrBlank() -> listOfNotNull(pagoDao.getPagoByAteId(ateId.toInt()))
+                    !rut.isNullOrBlank() -> pagoDao.getPagosByRut(rut)
+                    else -> emptyList()
+                }
+                if (cachedResults.isNotEmpty()) {
+                    resultados.clear()
+                    resultados.addAll(cachedResults)
+                }
+            } catch (e: Exception) {
+                // Error al leer la cache, no hacer nada y continuar a la red
+            }
 
+            // 2. Si no hay red, mostrar mensaje y terminar
+            if (!isNetworkAvailable()) {
+                if (resultados.isEmpty()) {
+                    mensaje.value = "No hay conexión a internet y no se encontraron datos locales."
+                }
+                return@launch
+            }
+
+            // 3. Buscar en la red
+            try {
                 val response = when {
                     !ateId.isNullOrBlank() -> RetrofitInstance.api.buscarPorAteId(ateId)
                     !rut.isNullOrBlank() -> RetrofitInstance.api.buscarPorRut(rut)
@@ -74,18 +95,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 if (response.isNotEmpty()) {
+                    // 4. Actualizar la base de datos y la UI
+                    resultados.clear()
                     resultados.addAll(response)
+                    mensaje.value = null
+                    // Guardar en la BD
+                    pagoDao.insertAll(response)
                 } else {
-                    mensaje.value = "No se encontraron resultados."
+                    if (resultados.isEmpty()) {
+                        mensaje.value = "No se encontraron resultados."
+                    }
                 }
 
             } catch (e: Exception) {
-                mensaje.value = "Error: ${e.localizedMessage}"
+                if (resultados.isEmpty()) {
+                    mensaje.value = "Error de red: ${e.localizedMessage}"
+                }
             }
         }
     }
 
-    // Factory para crear el ViewModel con el contexto de la aplicación
     class Factory(private val app: Application) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(MainViewModel::class.java)) {

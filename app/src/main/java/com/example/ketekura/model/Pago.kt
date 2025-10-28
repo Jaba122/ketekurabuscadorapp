@@ -1,6 +1,11 @@
 package com.example.ketekura.model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "pagos")
 data class Pago(
+    @PrimaryKey
     val ate_id: Int,
     val nombre_completo: String,
     val rut: String,
@@ -10,4 +15,3 @@ data class Pago(
     val monto_a_cancelar: Double?,
     val obs_pago: String?
 )
-
