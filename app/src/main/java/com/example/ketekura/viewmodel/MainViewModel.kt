@@ -17,10 +17,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     val resultados = mutableStateListOf<Pago>()
     val mensaje = mutableStateOf<String?>(null)
+    var isLoading by mutableStateOf(false) // Estado para el indicador de carga
+        private set
 
     private val _rut = MutableStateFlow("")
     val rut: StateFlow<String> = _rut.asStateFlow()
@@ -28,7 +32,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _rutError = MutableStateFlow<String?>(null)
     val rutError: StateFlow<String?> = _rutError.asStateFlow()
 
-    // Instancia del DAO
     private val pagoDao = AppDatabase.getDatabase(application).pagoDao()
 
     fun onRutChange(newRut: String) {
@@ -53,7 +56,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun buscar(ateId: String?, rut: String?) {
-        // Validación
         if (!rut.isNullOrBlank()) {
             onRutChange(rut)
             if (_rutError.value != null) {
@@ -63,7 +65,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         viewModelScope.launch {
-            // 1. Cargar desde la base de datos local primero
+            isLoading = true // Empezar a cargar
+            mensaje.value = null
             try {
                 val cachedResults = when {
                     !ateId.isNullOrBlank() -> listOfNotNull(pagoDao.getPagoByAteId(ateId.toInt()))
@@ -74,20 +77,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     resultados.clear()
                     resultados.addAll(cachedResults)
                 }
-            } catch (e: Exception) {
-                // Error al leer la cache, no hacer nada y continuar a la red
-            }
 
-            // 2. Si no hay red, mostrar mensaje y terminar
-            if (!isNetworkAvailable()) {
-                if (resultados.isEmpty()) {
-                    mensaje.value = "No hay conexión a internet y no se encontraron datos locales."
+                if (!isNetworkAvailable()) {
+                    if (resultados.isEmpty()) {
+                        mensaje.value = "No hay conexión a internet y no se encontraron datos locales."
+                    }
+                    return@launch
                 }
-                return@launch
-            }
 
-            // 3. Buscar en la red
-            try {
                 val response = when {
                     !ateId.isNullOrBlank() -> RetrofitInstance.api.buscarPorAteId(ateId)
                     !rut.isNullOrBlank() -> RetrofitInstance.api.buscarPorRut(rut)
@@ -95,22 +92,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 if (response.isNotEmpty()) {
-                    // 4. Actualizar la base de datos y la UI
                     resultados.clear()
                     resultados.addAll(response)
-                    mensaje.value = null
-                    // Guardar en la BD
                     pagoDao.insertAll(response)
                 } else {
-                    if (resultados.isEmpty()) {
+                    if (cachedResults.isEmpty()) {
                         mensaje.value = "No se encontraron resultados."
                     }
                 }
-
             } catch (e: Exception) {
-                if (resultados.isEmpty()) {
-                    mensaje.value = "Error de red: ${e.localizedMessage}"
-                }
+                mensaje.value = "Error: ${e.localizedMessage}"
+            } finally {
+                isLoading = false // Terminar de cargar
             }
         }
     }

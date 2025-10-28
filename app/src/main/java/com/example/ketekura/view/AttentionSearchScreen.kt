@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -18,6 +19,7 @@ import com.example.ketekura.viewmodel.MainViewModel
 @Composable
 fun AttentionSearchScreen(viewModel: MainViewModel = viewModel(factory = MainViewModel.Factory(LocalContext.current.applicationContext as Application))) {
     var ateId by remember { mutableStateOf("") }
+    val isLoading = viewModel.isLoading
 
     Column(
         Modifier
@@ -37,7 +39,7 @@ fun AttentionSearchScreen(viewModel: MainViewModel = viewModel(factory = MainVie
         Spacer(Modifier.height(12.dp))
 
         Button(
-            onClick = { viewModel.buscar(ateId, "") }, // Search only by ateId
+            onClick = { viewModel.buscar(ateId, "") },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Buscar")
@@ -45,31 +47,37 @@ fun AttentionSearchScreen(viewModel: MainViewModel = viewModel(factory = MainVie
 
         Spacer(Modifier.height(12.dp))
 
-        viewModel.mensaje.value?.let {
-            Text(it, color = MaterialTheme.colorScheme.error)
-        }
+        if (isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else {
+            viewModel.mensaje.value?.let {
+                Text(it, color = MaterialTheme.colorScheme.error)
+            }
 
-        LazyColumn(modifier = Modifier.padding(top = 8.dp)) {
-            items(
-                items = viewModel.resultados,
-                key = { it.ate_id } // Clave única para un rendimiento óptimo
-            ) { pago ->
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                ) {
-                    Card(
-                        Modifier
-                            .padding(vertical = 4.dp)
-                            .fillMaxWidth()
+            LazyColumn(modifier = Modifier.padding(top = 8.dp)) {
+                items(
+                    items = viewModel.resultados,
+                    key = { it.ate_id }
+                ) { pago ->
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn(),
+                        exit = fadeOut(),
                     ) {
-                        Column(Modifier.padding(12.dp)) {
-                            Text("ATE_ID: ${pago.ate_id}")
-                            Text("Paciente: ${pago.nombre_completo}")
-                            Text("RUT: ${pago.rut}")
-                            Text("Monto: ${pago.monto_atencion ?: 0}")
-                            Text("Observación: ${pago.obs_pago ?: "-"}")
+                        Card(
+                            Modifier
+                                .padding(vertical = 4.dp)
+                                .fillMaxWidth()
+                        ) {
+                            Column(Modifier.padding(12.dp)) {
+                                Text("ATE_ID: ${pago.ate_id}")
+                                Text("Paciente: ${pago.nombre_completo}")
+                                Text("RUT: ${pago.rut}")
+                                Text("Monto: ${pago.monto_atencion ?: 0}")
+                                Text("Observación: ${pago.obs_pago ?: "-"}")
+                            }
                         }
                     }
                 }
