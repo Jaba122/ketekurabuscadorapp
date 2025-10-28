@@ -1,14 +1,8 @@
 pluginManagement {
     repositories {
-        google {
-            content {
-                includeGroupByRegex("com\\.android.*")
-                includeGroupByRegex("com\\.google.*")
-                includeGroupByRegex("androidx.*")
-            }
-        }
+        google()
         mavenCentral()
-        gradlePluginPortal()
+        gradlePluginPortal() // <-- AÑADIR ESTA LÍNEA ES LA SOLUCIÓN
     }
 }
 dependencyResolutionManagement {
@@ -21,4 +15,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "ketekura"
 include(":app")
- 
