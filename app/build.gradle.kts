@@ -2,14 +2,12 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.ksp) // Restaurado a ksp
+    alias(libs.plugins.ksp)
 }
 
 android {
     namespace = "com.example.ketekura"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.ketekura"
@@ -17,7 +15,6 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -40,56 +37,51 @@ android {
     buildFeatures {
         compose = true
     }
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
+// BLOQUE DE DEPENDENCIAS CORREGIDO Y LIMPIO
 dependencies {
+    // --- Core & UI --- 
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
+    implementation(platform(libs.androidx.compose.bom)) // BOM gestiona versiones de Compose
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.material.icons.extended)
 
-    // Room
+    // --- ViewModel & Lifecycle ---
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+
+    // --- Coroutines (Versión única) ---
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.core)
+
+    // --- Room Database ---
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    ksp(libs.androidx.room.compiler) // Restaurado a ksp
+    ksp(libs.androidx.room.compiler)
 
+    // --- Retrofit (Versión única y estable para evitar conflictos) ---
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+
+    // --- Test Dependencies ---
     testImplementation(libs.junit)
+    testImplementation(libs.mockito.kotlin.v521)
+    testImplementation(libs.jetbrains.kotlinx.coroutines.test)
+
+    // --- Android Test Dependencies ---
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-    // Retrofit (para llamadas HTTP a Flask)
-    implementation(libs.retrofit)
-    implementation(libs.converter.gson)
-
-// Corrutinas (si harás llamadas asíncronas)
-    implementation(libs.kotlinx.coroutines.android)
-
-// Material Design (para botones, inputs, etc.)
-    implementation(libs.material)
-
-    // Jetpack Compose (si tu proyecto lo usa)
-    implementation(libs.androidx.activity.compose.v192)
-    implementation(platform(libs.androidx.compose.bom.v20240500))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.material3)
-    implementation(libs.androidx.ui.tooling.preview)
-
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.androidx.lifecycle.runtime.compose)
-
-    implementation(libs.retrofit.v2110)
-    implementation(libs.converter.gson.v2110)
-
-    implementation(libs.kotlinx.coroutines.android.v190)
-    implementation(libs.kotlinx.coroutines.core)
-
 }
