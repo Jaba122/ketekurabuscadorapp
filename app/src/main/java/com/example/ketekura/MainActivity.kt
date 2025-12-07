@@ -47,12 +47,12 @@ fun AppNavigation() {
 
         // 2. Ruta para el Panel de Administrador
         composable("admin_dashboard") {
-            AdminDashboard(navController = navController)
+            AdminDashboard()
         }
 
         // 3. Ruta para el Panel de Paciente
         composable("patient_dashboard") {
-            PatientDashboardScreen(navController = navController)
+            PatientDashboardScreen()
         }
     }
 }

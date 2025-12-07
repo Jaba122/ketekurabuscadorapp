@@ -1,11 +1,6 @@
 package com.example.ketekura.view
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -16,24 +11,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainContentScreen(
     username: String,
     onNavigateToAttentionSearch: () -> Unit,
-    onNavigateToPatientHistory: () -> Unit,
-    navController: NavController
+    onNavigateToPatientHistory: () -> Unit
 ) {
     Scaffold(
-        topBar = { 
-            KetekuraTopAppBar(
-                title = "Inicio", 
-                canNavigateBack = false, 
-                navController = navController
-            ) 
-        }
+        topBar = { KetekuraTopAppBar() } // Aquí integramos la TopAppBar
     ) { innerPadding ->
         Column(
             modifier = Modifier
