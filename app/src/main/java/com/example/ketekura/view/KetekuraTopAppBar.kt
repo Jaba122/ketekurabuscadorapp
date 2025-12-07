@@ -1,46 +1,36 @@
 package com.example.ketekura.view
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import com.example.ketekura.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun KetekuraTopAppBar(
-    title: String,
-    canNavigateBack: Boolean,
-    navController: NavController,
-    modifier: Modifier = Modifier,
-    onRefreshClicked: (() -> Unit)? = null
-) {
+fun KetekuraTopAppBar() {
     TopAppBar(
-        title = { Text(title) },
-        modifier = modifier,
-        actions = {
-            if (onRefreshClicked != null) {
-                IconButton(onClick = onRefreshClicked) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "Actualizar"
-                    )
-                }
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Asumiendo que tu logo se llama 'logo.png' y está en 'res/drawable'
+                Image(painter = painterResource(id = R.drawable.logo), contentDescription = "Logo de Ketekura")
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = "Portal Ketekura")
             }
-            IconButton(onClick = {
-                navController.navigate("login") { popUpTo(0) { inclusive = true } }
-            }) {
-                Icon(
-                    imageVector = Icons.Filled.ExitToApp,
-                    contentDescription = "Cerrar Sesión"
-                )
-            }
-        }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        )
     )
 }
