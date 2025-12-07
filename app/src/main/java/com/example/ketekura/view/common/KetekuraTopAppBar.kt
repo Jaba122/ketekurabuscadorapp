@@ -1,4 +1,4 @@
-package com.example.ketekura.view
+package com.example.ketekura.view.common
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp

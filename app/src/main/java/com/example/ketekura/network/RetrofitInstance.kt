@@ -23,7 +23,7 @@ object RetrofitInstance {
 
     val api: ApiService by lazy {
         Retrofit.Builder()
-            .baseUrl("http://54.164.71.117:5000/") // IP + Puerto correcto
+            .baseUrl("http://54.164.71.117/") // IP
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
