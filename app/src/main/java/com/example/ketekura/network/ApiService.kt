@@ -8,6 +8,7 @@ import com.example.ketekura.model.RegistrarPagoRequest
 import com.example.ketekura.model.RegistrarPagoResponse
 import com.example.ketekura.model.UpdatePagoRequest
 import com.example.ketekura.model.UpdatePagoResponse
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -32,7 +33,7 @@ interface ApiService {
     suspend fun getMisPagos(): List<MisPagosResponse>
 
     @POST("pago")
-    suspend fun registrarPago(@Body request: RegistrarPagoRequest): RegistrarPagoResponse
+    suspend fun registrarPago(@Body request: RegistrarPagoRequest): Response<RegistrarPagoResponse>
 
     // --- Endpoints de Administrador ---
 

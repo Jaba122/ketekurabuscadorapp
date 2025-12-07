@@ -1,104 +1,111 @@
 package com.example.ketekura.view
 
-import android.app.Application
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.ketekura.viewmodel.MainViewModel
+import com.example.ketekura.model.MisPagosResponse
+import com.example.ketekura.viewmodel.PatientUiState
+import com.example.ketekura.viewmodel.PatientViewModel
 
 @Composable
-fun PatientHistoryScreen(viewModel: MainViewModel = viewModel(factory = MainViewModel.Factory(LocalContext.current.applicationContext as Application))) {
-    val rut by viewModel.rut.collectAsState()
-    val rutError by viewModel.rutError.collectAsState()
-    val isLoading = viewModel.isLoading
+fun PatientHistoryScreen(patientViewModel: PatientViewModel) {
+    val uiState by patientViewModel.paymentsState.collectAsState()
+    val processingPaymentId by patientViewModel.isProcessingPayment.collectAsState()
 
-    Column(
-        Modifier
-            .padding(16.dp)
-            .fillMaxSize()
+    LaunchedEffect(Unit) {
+        patientViewModel.loadMyPayments()
+    }
+
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
-        Text("Buscar Historial por RUT", style = MaterialTheme.typography.headlineSmall)
-        Spacer(Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = rut,
-            onValueChange = { viewModel.onRutChange(it) },
-            label = { Text("RUT del Paciente") },
-            modifier = Modifier.fillMaxWidth(),
-            isError = rutError != null,
-            trailingIcon = { // Añadir ícono de error
-                if (rutError != null) {
-                    Icon(Icons.Filled.Error, "Error", tint = MaterialTheme.colorScheme.error)
-                }
-            },
-            supportingText = {
-                rutError?.let {
-                    Text(it, color = MaterialTheme.colorScheme.error)
-                }
-            }
-        )
-
-        Spacer(Modifier.height(12.dp))
-
-        Button(
-            onClick = { viewModel.buscar("", rut) },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Buscar")
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        if (isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        when (val state = uiState) {
+            is PatientUiState.Loading -> {
                 CircularProgressIndicator()
             }
-        } else {
-            viewModel.mensaje.value?.let {
-                if (it != rutError) {
-                    Text(it, color = MaterialTheme.colorScheme.error)
+            is PatientUiState.Success -> {
+                if (state.payments.isEmpty()) {
+                    Text("No tienes pagos pendientes.")
+                } else {
+                    PaymentList(
+                        payments = state.payments,
+                        processingPaymentId = processingPaymentId,
+                        onPagarClicked = { atencionId ->
+                            patientViewModel.realizarPago(atencionId)
+                        }
+                    )
                 }
             }
+            is PatientUiState.Error -> {
+                Text(text = state.message, color = MaterialTheme.colorScheme.error)
+            }
+        }
+    }
+}
 
-            LazyColumn(modifier = Modifier.padding(top = 8.dp)) {
-                items(
-                    items = viewModel.resultados,
-                    key = { it.ate_id }
-                ) { pago ->
-                    AnimatedVisibility(
-                        visible = true,
-                        enter = fadeIn(),
-                        exit = fadeOut(),
-                    ) {
-                        Card(
-                            Modifier
-                                .padding(vertical = 4.dp)
-                                .fillMaxWidth()
-                        ) {
-                            Column(Modifier.padding(12.dp)) {
-                                Text("ATE_ID: ${pago.ate_id}")
-                                Text("Paciente: ${pago.nombre_completo}")
-                                Text("RUT: ${pago.rut}")
-                                Text("Monto: ${pago.monto_atencion ?: 0}")
-                                Text("Observación: ${pago.obs_pago ?: "-"}")
-                            }
+@Composable
+fun PaymentList(
+    payments: List<MisPagosResponse>,
+    processingPaymentId: Int?,
+    onPagarClicked: (Int) -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp)
+    ) {
+        items(payments) { payment ->
+            PaymentCard(
+                payment = payment,
+                isProcessing = processingPaymentId == payment.ateId,
+                onPagarClicked = onPagarClicked
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+fun PaymentCard(
+    payment: MisPagosResponse,
+    isProcessing: Boolean,
+    onPagarClicked: (Int) -> Unit
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(text = "Atención ID: ${payment.ateId}", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(text = "Estado: ${payment.estado ?: "No especificado"}")
+            Text(text = "Monto Atención: $${payment.montoAtencion ?: 0.0}")
+            payment.montoACancelar?.let {
+                Text(text = "Monto a Cancelar: $${it}")
+            }
+            payment.fechaVencimiento?.let {
+                Text(text = "Vencimiento: $it")
+            }
+            payment.fechaPago?.let {
+                Text(text = "Fecha de Pago: $it")
+            }
+
+            if (payment.estado == "PENDIENTE") {
+                Spacer(modifier = Modifier.height(16.dp))
+                Box(
+                    modifier = Modifier.align(Alignment.End),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isProcessing) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    } else {
+                        Button(onClick = { onPagarClicked(payment.ateId) }) {
+                            Text("Pagar")
                         }
                     }
                 }
