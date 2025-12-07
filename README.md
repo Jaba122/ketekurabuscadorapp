@@ -1,55 +1,73 @@
+Aquí tienes el archivo `README.md` actualizado. He incorporado las nuevas funcionalidades encontradas en los archivos de la rama "fix", específicamente la implementación de **Room Database** para almacenamiento local, el **Escáner QR** para administradores, y la **Geolocalización de clínicas**.
+
+-----
+
 # Proyecto Ketekura App
 
-Aplicación móvil para Android que se conecta a un microservicio en Flask para la gestión y consulta de pagos de atenciones médicas.
+Aplicación móvil para Android que se conecta a un microservicio en Flask para la gestión y consulta de pagos de atenciones médicas. Esta versión incluye mejoras de persistencia local y nuevas herramientas de hardware.
 
 ## Integrantes
 
-*   **Javiera Nuñez**
+  * **Javiera Nuñez**
 
----
+-----
 
 ## Funcionalidad de la Aplicación
 
-La aplicación cuenta con dos perfiles de usuario (roles) con funcionalidades distintas:
+La aplicación cuenta con dos perfiles de usuario (roles) con funcionalidades distintas, además de características generales nuevas:
 
-### 1. Rol de Paciente
+### 1\. Rol de Paciente
 
-*   **Login**: El paciente inicia sesión con su usuario y contraseña.
-*   **Visualización de Pagos**: Una vez autenticado, puede ver un listado de todos sus pagos históricos y pendientes, incluyendo detalles como el monto, estado y fechas.
-*   **Registrar Pago**: (Funcionalidad de backend preparada) El paciente puede registrar un pago para una atención pendiente.
+  * **Login**: El paciente inicia sesión con su usuario y contraseña.
+  * **Visualización de Pagos**: Una vez autenticado, puede ver un listado de todos sus pagos históricos y pendientes, incluyendo detalles como el monto, estado y fechas.
+  * **Registrar Pago**: El paciente puede registrar un pago para una atención pendiente.
+  * **Clínicas Cercanas (NUEVO)**: Utilizando servicios de geolocalización, el paciente puede visualizar una lista de hospitales y clínicas cercanas a su ubicación actual (ej. Hospital Carlos Van Buren, Clínica Reñaca), ordenadas por distancia.
 
-### 2. Rol de Administrador
+### 2\. Rol de Administrador
 
-*   **Login**: El administrador inicia sesión con sus credenciales específicas.
-*   **Búsqueda de Atenciones por RUT**: El administrador puede buscar todas las atenciones asociadas a un paciente introduciendo su RUT.
-*   **Visualización de Resultados**: La aplicación muestra una lista detallada de las atenciones encontradas para el RUT buscado.
-*   **Actualizar Estado de Pago**: (Funcialidad de backend preparada) El administrador tiene la capacidad de marcar una atención como pagada.
+  * **Login**: El administrador inicia sesión con sus credenciales específicas.
+  * **Búsqueda de Atenciones por RUT**: El administrador puede buscar todas las atenciones asociadas a un paciente introduciendo su RUT.
+  * **Visualización de Resultados**: La aplicación muestra una lista detallada de las atenciones encontradas.
+  * **Actualizar Estado de Pago**: El administrador tiene la capacidad de marcar una atención como pagada.
+  * **Escáner QR (NUEVO)**: Herramienta integrada que utiliza la cámara del dispositivo y ML Kit para escanear códigos QR de forma rápida dentro de la gestión administrativa.
 
----
+-----
 
-## Arquitectura y Endpoints
+## Arquitectura y Tecnologías
 
-La aplicación móvil se comunica con un microservicio desarrollado en Flask y Python. Los endpoints utilizados son los siguientes:
+La aplicación móvil sigue una arquitectura MVVM y se comunica con un microservicio en Flask. En esta rama "fix" se han integrado las siguientes tecnologías:
 
-*   `POST /login`: Autentica a los usuarios (pacientes y administradores).
-*   `GET /buscar`: Busca públicamente atenciones por ID (`ate_id`) o `rut`.
-*   `GET /mis-pagos`: [PACIENTE] Obtiene la lista de pagos del paciente autenticado.
-*   `POST /pago`: [PACIENTE] Permite al paciente registrar un pago.
-*   `GET /buscar-atenciones`: [ADMIN] Busca todas las atenciones de un paciente por `rut`.
-*   `GET /admin/pagos`: [ADMIN] Obtiene una lista de todos los pagos.
-*   `POST /admin/update-pago`: [ADMIN] Permite a un administrador actualizar el estado de un pago.
+  * **Backend**: Python con Flask y Oracle Database.
+  * **Base de Datos Local (Android)**: Implementación de **Room Database** para la persistencia local de datos de usuarios (`User`) y pagos (`Pago`), permitiendo un acceso más fluido a la información previamente cargada.
+  * **Servicios de Ubicación**: Integración de `Play Services Location` para obtener la ubicación del usuario en tiempo real.
+  * **Cámara y Machine Learning**: Uso de **CameraX** y **ML Kit Barcode Scanning** para la funcionalidad de lectura de códigos QR.
+  * **Red**: Retrofit para el consumo de la API REST.
 
----
+-----
+
+## Endpoints de la API
+
+La aplicación consume los siguientes endpoints del microservicio:
+
+  * `POST /login`: Autentica a los usuarios.
+  * `GET /buscar`: Busca atenciones por ID (`ate_id`) o `rut`.
+  * `GET /mis-pagos`: [PACIENTE] Obtiene la lista de pagos del usuario.
+  * `POST /pago`: [PACIENTE] Registra un pago.
+  * `GET /buscar-atenciones`: [ADMIN] Busca atenciones de un paciente por `rut`.
+  * `GET /admin/pagos`: [ADMIN] Obtiene una lista de todos los pagos.
+  * `POST /admin/update-pago`: [ADMIN] Actualiza el estado de un pago.
+
+-----
 
 ## Instrucciones de Ejecución
 
-Para ejecutar el proyecto completo, es necesario levantar tanto el backend (microservicio) como la aplicación móvil.
+Para ejecutar el proyecto completo, es necesario levantar tanto el backend como la aplicación móvil.
 
 ### Backend (Microservicio Flask)
 
-1.  **Clonar el repositorio** y navegar a la carpeta que contiene el código de Flask.
-2.  **Configurar Oracle Wallet**: Asegúrate de que la ruta al Oracle Wallet y las credenciales en el archivo `app.py` son correctas.
-3.  **Instalar dependencias**: Se recomienda usar un entorno virtual. Instala todas las librerías necesarias con pip:
+1.  **Clonar el repositorio** y navegar a la carpeta del código Flask.
+2.  **Configurar Oracle Wallet**: Verificar credenciales en `app.py`.
+3.  **Instalar dependencias**:
     ```sh
     pip install Flask oracledb bcrypt pyjwt flask-cors
     ```
@@ -57,48 +75,24 @@ Para ejecutar el proyecto completo, es necesario levantar tanto el backend (micr
     ```sh
     python app.py
     ```
-5.  El servidor se ejecutará por defecto en `http://0.0.0.0:5000`. Anota la dirección IP de la máquina donde se está ejecutando (ej. `192.168.1.10`).
+5.  Anota la dirección IP de la máquina (ej. `192.168.1.10`).
 
 ### App Móvil (Android)
 
-1.  **Clonar el repositorio**.
-2.  **Abrir el proyecto**: Abre la carpeta del proyecto con Android Studio.
-3.  **Actualizar la IP del servidor**: 
-    *   Navega al archivo `app/src/main/java/com/example/ketekura/network/RetrofitInstance.kt`.
-    *   Modifica la `baseUrl` para que apunte a la dirección IP de tu servidor Flask que anotaste en el paso anterior.
-    ```kotlin
-    // Ejemplo:
-    .baseUrl("http://192.168.1.10:5000/")
-    ```
-4.  **Sincronizar Gradle**: Espera a que Android Studio sincronice el proyecto y descargue todas las dependencias.
-5.  **Ejecutar la App**: Ejecuta la aplicación en un emulador o en un dispositivo físico conectado a la misma red que el servidor.
+1.  **Abrir el proyecto** en Android Studio.
+2.  **Configurar IP**: Modifica `RetrofitInstance.kt` con la IP de tu servidor Flask.
+3.  **Permisos del Dispositivo**:
+      * Al usar las nuevas funcionalidades, la app solicitará permisos de **Cámara** (para el escáner QR) y de **Ubicación Precisa** (para buscar clínicas). Es necesario otorgarlos para que estas funciones operen correctamente.
+4.  **Sincronizar Gradle**: Asegúrate de descargar las nuevas dependencias (Room, CameraX, ML Kit, Location).
+5.  **Ejecutar la App**: Instalar en un emulador o dispositivo físico.
 
----
+-----
 
-## APK Firmado y Llave de Publicación (.jks)
+## APK Firmado y Llave de Publicación
 
-### Generación del APK
-
-Para generar un APK firmado listo para distribución, puedes usar el asistente de Android Studio:
+Para generar el APK:
 
 1.  Ve a `Build > Generate Signed Bundle / APK...`.
-2.  Selecciona `APK` y sigue los pasos del asistente.
-3.  El APK generado se puede colocar en una carpeta `/apk` en la raíz del proyecto para fácil acceso.
+2.  Utiliza tu archivo `.jks` (Java KeyStore).
 
-### Archivo de Firma (.jks)
-
-**ADVERTENCIA DE SEGURIDAD MUY IMPORTANTE:**
-
-> El archivo `.jks` (Java KeyStore) es tu clave privada y secreta para firmar la aplicación. **NUNCA DEBES SUBIR ESTE ARCHIVO A GITHUB O A CUALQUIER REPOSITORIO PÚBLICO.**
-
-*   **Almacenamiento**: Guarda tu archivo `.jks` en un lugar seguro y privado en tu máquina local, fuera de la carpeta del proyecto que se sincroniza con Git.
-*   **Configuración**: Para que Gradle pueda encontrar la llave al firmar la app, debes configurar la ruta y las contraseñas en el archivo `gradle.properties` de tu proyecto, y asegurarte de que `gradle.properties` esté incluido en tu `.gitignore` para no subirlo accidentalmente.
-
----
-
-## Código Fuente
-
-Este repositorio contiene el código fuente completo para:
-
-*   **La aplicación móvil Android**.
-*   **El microservicio en Flask (Python)**.
+> **IMPORTANTE**: Mantén tu archivo `.jks` y las credenciales de `gradle.properties` fuera del repositorio público por seguridad.
