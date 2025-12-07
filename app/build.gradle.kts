@@ -67,11 +67,21 @@ dependencies {
     // --- Room Database ---
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.appcompat)
     ksp(libs.androidx.room.compiler)
 
     // --- Retrofit (Versión única y estable para evitar conflictos) ---
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
+
+    // --- Auth0 ---
+    implementation("com.auth0.android:jwtdecode:2.0.2")
+
+    // --- Google Maps & Location ---
+    implementation("com.google.maps.android:maps-compose:2.11.4")
+    implementation("com.google.android.gms:play-services-maps:18.1.0")
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+    implementation("com.google.accompanist:accompanist-permissions:0.31.5-beta") // Permisos
 
     // --- Test Dependencies ---
     testImplementation(libs.junit)

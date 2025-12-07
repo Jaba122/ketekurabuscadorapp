@@ -1,7 +1,5 @@
 package com.example.ketekura.viewmodel
 
-import com.example.ketekura.model.LoginRequest
-import com.example.ketekura.model.LoginResponse
 import com.example.ketekura.network.ApiService
 import com.example.ketekura.util.MainCoroutineRule
 import com.example.ketekura.util.TokenManager

@@ -1,6 +1,5 @@
 package com.example.ketekura.viewmodel
 
-import com.example.ketekura.model.MisPagosResponse
 import com.example.ketekura.network.ApiService
 import com.example.ketekura.util.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi

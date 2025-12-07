@@ -7,11 +7,17 @@ import androidx.room.PrimaryKey
 data class Pago(
     @PrimaryKey
     val ate_id: Int,
-    val nombre_completo: String,
-    val rut: String,
-    val fecha_venc_pago: String?,
-    val fecha_pago: String?,
-    val monto_atencion: Double?,
-    val monto_a_cancelar: Double?,
-    val obs_pago: String?
+
+    val nombre_completo: String? = null,
+    val rut: String? = null,
+
+    val fecha_venc_pago: String? = null,
+    val fecha_pago: String? = null,
+
+    val monto_atencion: Double? = null,
+    val monto_a_cancelar: Double? = null,
+
+    val obs_pago: String? = null,
+    val estado: String? = null
 )
+
